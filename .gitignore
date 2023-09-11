@@ -1,3 +1,9 @@
+# Vscode
+*.vscode
+
+# Clang
+*.clang-format
+
 # Prerequisites
 *.d
 
