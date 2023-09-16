@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
         string datafile {argv[1]};
         auto [a, b] = least_squares(read(datafile));
         cout << datafile << " " << a.value << " "
-             << b.value << " " << b.delta << endl;
+             << b.value << endl;
     }
     catch (const exception &e) {
         cerr << "Error: " << e.what() << endl;
