@@ -1,3 +1,4 @@
+import os
 import random
 import subprocess
 import sys
@@ -17,6 +18,31 @@ def generate_random_data(n: int) -> str:
     return name
 
 
+def create_plot(filename: str, a: float, b: float) -> None:
+    _, ax = plt.subplots()
+    data = [[], []]
+    with open(filename, 'r') as file:
+        for line in file.readlines():
+            x, y = map(float, line.split())
+            data[0].append(x)
+            data[1].append(y)
+
+    x = [min(data[0]), max(data[0])]
+    y = [min(data[0])*a + b, max(data[0])*a + b]
+    ax.plot(*data, 'ro')
+    ax.plot(x, y)
+    plt.show()
+
+
+def close() -> None:
+    curr_dir = os.getcwd()
+    for file in os.listdir(curr_dir):
+        if file.endswith(".txt"):
+            os.remove(os.path.join(curr_dir, file))
+
+    sys.exit(0)
+
+
 def parse_output(output: bytes) -> tuple[str, float, float]:
     output_str = output.decode().strip()
     tmp = output_str.split()
@@ -32,22 +58,6 @@ def pretty_print(filename: str, a: float, b: float, count: int) -> None:
             f"C++ programm output: {filename} {a} {b}\n"
             + "="*3
     )
-
-
-def create_plot(filename: str, a: float, b: float) -> None:
-    _, ax = plt.subplots()
-    data = [[], []]
-    with open(filename, 'r') as file:
-        for line in file.readlines():
-            x, y = map(float, line.split())
-            data[0].append(x)
-            data[1].append(y)
-
-    x = [min(data[0]), max(data[0])]
-    y = [min(data[0])*a + b, max(data[0])*a + b]
-    ax.plot(*data, 'ro')
-    ax.plot(x, y)
-    plt.show()
 
 
 def main(iterates: int) -> None:
@@ -75,6 +85,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         mpl.use('Qt5Agg')
         main(int(sys.argv[1]))
+        close()
     else:
         print(f"Usage: {__name__} <quantity>")
 
