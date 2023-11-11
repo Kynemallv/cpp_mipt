@@ -36,11 +36,13 @@
 *.exe
 *.out
 *.app
-*/bin
+*bin
+
+# Libraries
+*lib
 
 # Python
-*/venv
-venv
+*venv
 
 # CMake
-*/build
+*build
