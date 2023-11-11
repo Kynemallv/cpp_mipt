@@ -1,5 +1,5 @@
-#include "std_lib_facilities.h"
-#include "calculator/symbol_table/symbol_table.h"
+#include <std_lib_facilities.h>
+#include <calculator/symbol_table/symbol_table.h>
 
 namespace calculator::symbol_table {
 
@@ -52,7 +52,7 @@ double SymbolTable::define(string name, double value, bool is_const)
 {
   if (is_declared(name))
   {
-    error(name, " declared twice");
+    error(name, "define: declared twice");
   }
 
   var_table.push_back(Variable{name, value, is_const});

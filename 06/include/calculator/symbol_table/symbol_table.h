@@ -1,7 +1,7 @@
 #ifndef SYMBOL_TABLE_H
 #define SYMBOL_TABLE_H
 
-#include "std_lib_facilities.h"
+#include <std_lib_facilities.h>
 
 namespace calculator::symbol_table {
 

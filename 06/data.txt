@@ -1,0 +1,19 @@
+1 + 1;
+2 + 2
+3 + 3
+let a = 5
+let b = 3
+a * b;
+
+let c 5
+let = 5
+c = 5
+const c = 5
+const let c = 5
+const let c = 10
+let c = 10
+
+1 + 
+
+(1 + 1) / 2
+2 * (2 + 1)

@@ -1,11 +1,12 @@
-#include "std_lib_facilities.h"
-#include "calculator/parser/parser.h"
+#include <calculator/parser/parser.h>
+#include <std_lib_facilities.h>
 
 namespace calculator::parser {
 
 double Parser::primary()
 {
   token_stream::Token token = tstream.get();
+
   switch (token.kind)
   {
   case '(':
@@ -14,7 +15,7 @@ double Parser::primary()
     token = tstream.get();
     if (token.kind != ')')
     {
-      error("'(' expected");
+      error("')' expected");
     }
     return d;
   }
@@ -31,7 +32,7 @@ double Parser::primary()
     return symb_table.get(token.name);
 
   default:
-    error("primary expected: ", (char)token.kind);
+    error("primary expected: ", token.kind);
   }
 }
 
@@ -85,6 +86,9 @@ double Parser::expression()
       left -= term();
       break;
 
+    case token_stream::print:
+      return left;
+
     default:
       tstream.putback(token);
       return left;
@@ -92,20 +96,21 @@ double Parser::expression()
   }
 }
 
-double Parser::declaration(bool is_const = false)
+double Parser::declare(bool is_const = false)
 {
-
   if (is_const)
   {
     token_stream::Token token = tstream.get();
+
     if (token.kind != token_stream::let)
     {
       tstream.putback(token);
-      error("let expected in declaration");
+      error("let expected in const declaration");
     }
   }
 
   token_stream::Token token = tstream.get();
+
   if (token.kind != token_stream::name)
   {
     tstream.putback(token);
@@ -114,16 +119,18 @@ double Parser::declaration(bool is_const = false)
 
   string name = token.name;
   token = tstream.get();
+
   if (token.kind != '=')
   {
     tstream.putback(token);
-    error("'=' missing in declaration of ", name);
+    error("'=' expected in declaration");
   }
 
   if (symb_table.is_declared(name))
   {
     if (is_const)
     {
+      tstream.putback(token);
       error(name, " declared twice");
     }
     return symb_table.set(name, expression());
@@ -138,9 +145,9 @@ double Parser::statement()
   switch (token.kind)
   {
   case token_stream::let:
-    return declaration();
+    return declare();
   case token_stream::user_const:
-    return declaration(true);
+    return declare(true);
   default:
     tstream.putback(token);
     return expression();
@@ -154,9 +161,20 @@ void Parser::start_parse_loop()
   while (true)
     try
     {
-      cout << token_stream::prompt;
+      if (output == nullptr)
+      {
+        error("nullptr");
+      }
+
       token_stream::Token token = tstream.get();
-      while (token.kind == token_stream::print)
+
+      if (input == &cin && token.kind == token_stream::end_line)
+      {
+        *output << token_stream::prompt;
+      }
+
+      while (token.kind == token_stream::print ||
+             token.kind == token_stream::end_line)
       {
         token = tstream.get();
       }
@@ -167,23 +185,22 @@ void Parser::start_parse_loop()
       }
       if (token.kind == token_stream::help)
       {
-        cout << "You don`t need any help!" << endl;
+        *output << "You don`t need any help!" << endl;
         continue;
       }
 
       tstream.putback(token);
 
       double result_expression = statement();
-      cout << token_stream::result << result_expression << endl;
+
+      *output << token_stream::result << result_expression << endl;
       continue;
     }
     catch (runtime_error& e)
     {
       clean_up_mess();
-      cerr << "[ERROR]: " << e.what() << endl;
+      *output << "[ERROR]: " << e.what() << endl;
     }
 }
 
-void Parser::clean_up_mess() { tstream.ignore(";\n"); }
-
-}  // namespace Parser
+}  // namespace calculator::parser

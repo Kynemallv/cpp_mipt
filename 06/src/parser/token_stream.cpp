@@ -1,5 +1,5 @@
-#include "std_lib_facilities.h"
-#include "calculator/parser/token_stream/token_stream.h"
+#include <calculator/parser/token_stream/token_stream.h>
+#include <std_lib_facilities.h>
 
 namespace calculator::parser::token_stream {
 
@@ -16,6 +16,11 @@ void TokenStream::putback(Token t)
 
 Token TokenStream::get()
 {
+  if (input == nullptr)
+  {
+    error("nullptr");
+  }
+
   if (full)
   {
     full = false;
@@ -23,13 +28,16 @@ Token TokenStream::get()
   }
 
   char ch;
-  cin.get(ch);
+  input->get(ch);
+
+  if (input->eof())
+  {
+    return Token{quit};
+  }
 
   switch (ch)
   {
   case '\n':
-    return Token{print};
-
   case '(':
   case ')':
   case '+':
@@ -53,9 +61,10 @@ Token TokenStream::get()
   case '8':
   case '9':
   {
-    cin.putback(ch);
+
+    input->putback(ch);
     double val;
-    cin >> val;
+    *input >> val;
     return Token{number, val};
   }
 
@@ -69,11 +78,11 @@ Token TokenStream::get()
     {
       string s;
       s += ch;
-      while (cin.get(ch) && (isalpha(ch) || isdigit(ch)) || ch == '_')
+      while (input->get(ch) && (isalpha(ch) || isdigit(ch) || ch == '_'))
       {
         s += ch;
       }
-      cin.putback(ch);
+      input->putback(ch);
 
       auto command = commands.find(s);
       if (command != commands.end())
@@ -101,7 +110,8 @@ void TokenStream::ignore(string s)
     buffer = get();
   }
 
+  putback(buffer);
   return;
 }
 
-}  // namespace TokenStream
+}  // namespace calculator::parser::token_stream

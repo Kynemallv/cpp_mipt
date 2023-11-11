@@ -1,7 +1,9 @@
 #ifndef TOKEN_STREAM_H
 #define TOKEN_STREAM_H
 
-#include "std_lib_facilities.h"
+#include <std_lib_facilities.h>
+
+#include <iostream>
 
 namespace calculator::parser::token_stream {
 
@@ -38,7 +40,9 @@ struct Token
 class TokenStream
 {
 public:
-  TokenStream(){};
+  TokenStream() { input = &cin; }
+
+  TokenStream(std::istream* input_stream) : input{input_stream} {}
 
   Token get ();
   void putback (Token t);
@@ -48,6 +52,8 @@ public:
 private:
   bool full{false};
   Token buffer{'\0'};
+
+  std::istream* input;
 };
 
 }  // namespace calculator::parser::token_stream
