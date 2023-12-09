@@ -59,16 +59,33 @@ public:
     void resize(int newsize, T val = T());
     void push_back(const T &d);
     void reserve(int newalloc);
+private:
+    void free_resources();
 }; 
 
 template <typename T, typename A>
-Vector<T, A>::Vector(int s): sz{s}, elem{alloc.allocate(s)}, space{s}
+Vector<T, A>::Vector(int s) 
 {
     if (kDebug)
         TRACE_FUNC;
+    
+    if (s < 0)
+        throw std::logic_error("s must be not negative");
 
-    for (int i = 0; i < sz; ++i)
-        alloc.construct(&elem[i], T());
+    try
+    {
+        sz = s;
+        elem = alloc.allocate(s);
+        space = s;
+
+        for (int i = 0; i < sz; ++i)
+            alloc.construct(&elem[i], T());
+    }
+    catch(...)
+    {
+        this->free_resources();
+        throw;
+    }
 }; 
 
 template <typename T, typename A>
@@ -77,9 +94,18 @@ Vector<T, A>::Vector(const Vector<T, A> &arg)
 {
     if (kDebug)
         TRACE_FUNC;
-
-    for (int i = 0; i < sz; ++i)
-        alloc.construct(&elem[i], arg.elem[i]);
+    
+    try
+    {
+        for (int i = 0; i < sz; ++i)
+            alloc.construct(&elem[i], arg.elem[i]);
+    }
+    catch(...)
+    {
+       this->free_resources;
+       throw; 
+    }
+    
 }
 
 template <typename T, typename A>
@@ -88,15 +114,23 @@ Vector<T, A>::Vector(std::initializer_list<T> l)
     if (kDebug)
         TRACE_FUNC;
 
-    sz = l.size();
-    elem = alloc.allocate(l.size());
-    space = l.size();
-
-    int i{0};
-    for (auto el : l)
+    try
     {
-        alloc.construct(&elem[i], el);
-        ++i;
+        sz = l.size();
+        elem = alloc.allocate(l.size());
+        space = l.size();
+
+        int i{0};
+        for (auto el : l)
+        {
+            alloc.construct(&elem[i], el);
+            ++i;
+        }
+    }
+    catch(...)
+    {
+        this->free_resources();
+        throw;
     }
 };
 
@@ -114,7 +148,7 @@ Vector<T, A>::Vector(const Vector<T, A> &&a)
 template <typename T, typename A>
 Vector<T, A> &Vector<T, A>::operator=(Vector &&a)
 { 
-    this->~Vector<T, A>();
+    this->free_resources();
 
     elem = a.elem;
     sz = a.sz;
@@ -145,7 +179,7 @@ Vector<T, A> &Vector<T, A>::operator=(const Vector &a)
     for (int i = 0; i < a.sz; ++i)
         alloc.construct(&p[i], a.elem[i]);
 
-    this->~Vector<T, A>();
+    this->free_resources();
     elem = p;
     sz = a.sz;
     space = a.sz;
@@ -159,11 +193,8 @@ template <typename T, typename A>
 bool is_vector(Vector<T, A> *v) { return true; }
 
 template <typename T, typename A>
-Vector<T, A>::~Vector()
+void Vector<T, A>::free_resources()
 {
-    if (kDebug)
-        TRACE_FUNC;
-
     if(is_vector(elem))
     {
         for (int i = 0; i < sz; ++i)
@@ -172,6 +203,15 @@ Vector<T, A>::~Vector()
 
     if (elem)
         alloc.deallocate(elem);
+}
+
+template <typename T, typename A>
+Vector<T, A>::~Vector()
+{
+    if (kDebug)
+        TRACE_FUNC;
+
+    this->free_resources();
 }
 
 template <typename T, typename A>
@@ -193,6 +233,9 @@ const T &Vector<T, A>::at(int n) const
 template <typename T, typename A>
 void Vector<T, A>::reserve(int newalloc)
 {
+    if (newalloc < 0)
+        throw std::logic_error("newalloc must be not negative");
+    
     if (newalloc <= space)
         return;
 
@@ -200,7 +243,7 @@ void Vector<T, A>::reserve(int newalloc)
     for (int i = 0; i < sz; ++i)
         alloc.construct(&p[i], elem[i]);
 
-    this->~Vector<T, A>();
+    this->free_resources();
     elem = p;
     space = newalloc;
 }
@@ -220,10 +263,13 @@ void Vector<T, A>::push_back(const T &val)
 template <typename T, typename A>
 void Vector<T, A>::resize(int newsize, T val)
 {
-    Vector::reserve(newsize);
-    for (int i = 0; i < newsize; ++i)
+    if (newsize < 0)
+        throw std::logic_error("newsize must be not negative");
+
+    reserve(newsize);
+    for (int i = sz; i < newsize; ++i)
         alloc.construct(&elem[i], val);
-    for (int i = 0; i < newsize; ++i)
+    for (int i = newsize; i < sz; ++i)
         alloc.destroy(&elem[i]);
     sz = newsize;
 }
